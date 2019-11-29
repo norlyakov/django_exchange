@@ -1,1 +1,1 @@
-# django_exchange
+# Django test exchange
