@@ -1,0 +1,4 @@
+.idea/
+env/
+exchange/db.sqlite3
+*.pyc
