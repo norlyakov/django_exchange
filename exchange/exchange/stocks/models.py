@@ -32,10 +32,16 @@ class TransactionTypes(enum.Enum):
 
 
 class Transaction(models.Model):
-    stock_from = models.ForeignKey(Stock, on_delete=models.PROTECT, null=True)
-    stock_to = models.ForeignKey(Stock, on_delete=models.PROTECT, null=True)
+    TRANSACTION_CHOICES = [
+        ('CMN', TransactionTypes.common.name),
+        ('CMS', TransactionTypes.commission.name),
+        ('CNL', TransactionTypes.canceled.name),
+        ('RVK', TransactionTypes.revoke.name),
+    ]
+    stock_from = models.ForeignKey(Stock, on_delete=models.PROTECT, null=True, related_name='+')
+    stock_to = models.ForeignKey(Stock, on_delete=models.PROTECT, null=True, related_name='+')
     value = models.IntegerField()
-    type = models.TextField(max_length=20, choices=[t.name for t in TransactionTypes],
+    type = models.TextField(max_length=3, choices=TRANSACTION_CHOICES,
                             default=TransactionTypes.common.name)
     related_transaction = models.ForeignKey('self', on_delete=models.CASCADE, null=True, default=None)
 
