@@ -1,0 +1,191 @@
+Stocks
+******
+
+GET http://localhost:8000/v1/stocks/
+====================================
+Returns stocks list
+# For admin returns all users?
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "created": "2013-01-29T12:34:56.000000Z",
+            "updated": "2013-01-29T12:34:56.000000Z",
+            "user": "username",
+            "currency": "currencyname1",
+            "value": 1234.56
+        },
+        {
+            "id": 2,
+            "created": "2013-01-29T12:34:56.000000Z",
+            "updated": "2013-01-29T12:34:56.000000Z",
+            "user": "username",
+            "currency": "currencyname2",
+            "value": 1234.56
+        },
+    ]
+}
+
+
+POST http://localhost:8000/v1/stocks/
+=====================================
+Create a stock for current user.
+# Possibly admin can create for any user?
+{
+    "id": 3,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "user": "username",
+    "currency": "currencyname2",
+    "value": 1234.56,
+}
+
+
+Stock
+*****
+
+GET http://localhost:8000/v1/stocks/<stock_id>/
+===============================================
+Get info about single stock
+{
+    "id": 3,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "user": "username",
+    "currency": "currencyname2",
+    "value": 1234.56
+}
+
+Transactions
+************
+
+GET http://localhost:8000/v1/transactions/
+==========================================
+Returns transactions list
+# For admin returns all transactions?
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "created": "2013-01-29T12:34:56.000000Z",
+            "updated": "2013-01-29T12:34:56.000000Z",
+            "stock_from": 3,
+            "stock_to": 1,
+            "value": 1234.56,
+            "type": "common",
+            "related_transaction": null
+        },
+        {
+            "id": 2,
+            "created": "2013-01-29T12:34:56.000000Z",
+            "updated": "2013-01-29T12:34:56.000000Z",
+            "stock_from": 1,
+            "stock_to": 2,
+            "value": 1234.56,
+            "type": "revoke",
+            "related_transaction": 3
+        },
+    ]
+}
+
+POST http://localhost:8000/v1/transactions/
+===========================================
+Create transaction for current user
+# Possibly admin can create for any user?
+{
+    "id": 2,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "stock_from": 1,
+    "stock_to": 2,
+    "value": 1234.56,
+    "type": "revoke",
+    "related_transaction": 3
+}
+
+Transaction
+***********
+
+GET http://localhost:8000/v1/transactions/<transaction_id>/
+===========================================================
+Get info about single transaction
+{
+    "id": 1,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "stock_from": 1,
+    "stock_to": 2,
+    "value": 1234.56,
+    "type": "revoke",
+    "related_transaction": 3
+}
+
+PATCH http://localhost:8000/v1/transactions/<transaction_id>/
+=============================================================
+Change transaction (for example revoke). Actually user can only revoke it yet.
+# mb admin can do more?
+{
+    "id": 1,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "stock_from": 1,
+    "stock_to": 2,
+    "value": 1234.56,
+    "type": "revoke",
+    "related_transaction": 3
+}
+
+Currencies
+**********
+
+GET http://localhost:8000/v1/currencies/
+========================================
+Returns currencies list
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "created": "2013-01-29T12:34:56.000000Z",
+            "updated": "2013-01-29T12:34:56.000000Z",
+            "value": "USD"
+        },
+        {
+            "id": 2
+            "created": "2013-01-29T12:34:56.000000Z",
+            "updated": "2013-01-29T12:34:56.000000Z",
+            "value": "RUB"
+        },
+    ]
+}
+
+POST http://localhost:8000/v1/currencies/
+=========================================
+Create currency - only by admin
+{
+    "id": 3,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "value": "EUR"
+}
+
+Currency
+********
+
+GET http://localhost:8000/v1/currencies/<currency_id>/
+======================================================
+Get info about single transaction
+{
+    "id": 1,
+    "created": "2013-01-29T12:34:56.000000Z",
+    "updated": "2013-01-29T12:34:56.000000Z",
+    "value": "USD"
+}
