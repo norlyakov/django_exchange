@@ -1,6 +1,8 @@
 import enum
+from decimal import Decimal
 
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -16,7 +18,8 @@ class Stock(models.Model):
     updated = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
-    value = models.PositiveIntegerField(default=0)
+    value = models.DecimalField(default=0, max_digits=100, decimal_places=5,
+                                validators=[MinValueValidator(Decimal('0'))])
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -46,7 +49,8 @@ class Transaction(models.Model):
     updated = models.DateTimeField(auto_now=True)
     stock_from = models.ForeignKey(Stock, on_delete=models.PROTECT, null=True, related_name='+')
     stock_to = models.ForeignKey(Stock, on_delete=models.PROTECT, null=True, related_name='+')
-    value = models.IntegerField()
+    value = models.DecimalField(default=0, max_digits=100, decimal_places=5,
+                                validators=[MinValueValidator(Decimal('0'))])
     type = models.CharField(max_length=3, choices=TRANSACTION_CHOICES,
                             default=TransactionTypes.common.name)
     related_transaction = models.ForeignKey('self', on_delete=models.PROTECT, null=True, default=None)
