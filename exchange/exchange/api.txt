@@ -1,8 +1,44 @@
+Use cases
+*********
+
+User
+====
+
 Stocks
-******
+------
+
+- See all his stocks
+- See all rates
+- Creating new stocks
+
+Transactions
+------------
+
+- See transactions history
+- Create inner transaction
+- Create outer transaction
+- Exchange between his own stocks
+- Transfer to other user's stock
+- Revoke transfer transaction
+
+Admin
+=====
+He can everything what user can (for all users)
+And also:
+
+Stocks
+------
+
+- Block stocks
+
+API
+***
+
+Stocks
+======
 
 GET http://localhost:8000/v1/stocks/
-====================================
+------------------------------------
 Returns stocks list
 # For admin returns all users?
 {
@@ -31,7 +67,7 @@ Returns stocks list
 
 
 POST http://localhost:8000/v1/stocks/
-=====================================
+-------------------------------------
 Create a stock for current user.
 # Possibly admin can create for any user?
 {
@@ -45,10 +81,10 @@ Create a stock for current user.
 
 
 Stock
-*****
+=====
 
 GET http://localhost:8000/v1/stocks/<stock_id>/
-===============================================
+-----------------------------------------------
 Get info about single stock
 {
     "id": 3,
@@ -60,10 +96,10 @@ Get info about single stock
 }
 
 Transactions
-************
+============
 
 GET http://localhost:8000/v1/transactions/
-==========================================
+------------------------------------------
 Returns transactions list
 # For admin returns all transactions?
 {
@@ -95,7 +131,7 @@ Returns transactions list
 }
 
 POST http://localhost:8000/v1/transactions/
-===========================================
+-------------------------------------------
 Create transaction for current user
 # Possibly admin can create for any user?
 {
@@ -110,10 +146,10 @@ Create transaction for current user
 }
 
 Transaction
-***********
+===========
 
 GET http://localhost:8000/v1/transactions/<transaction_id>/
-===========================================================
+-----------------------------------------------------------
 Get info about single transaction
 {
     "id": 1,
@@ -127,7 +163,7 @@ Get info about single transaction
 }
 
 PATCH http://localhost:8000/v1/transactions/<transaction_id>/
-=============================================================
+-------------------------------------------------------------
 Change transaction (for example revoke). Actually user can only revoke it yet.
 # mb admin can do more?
 {
@@ -142,10 +178,10 @@ Change transaction (for example revoke). Actually user can only revoke it yet.
 }
 
 Currencies
-**********
+==========
 
 GET http://localhost:8000/v1/currencies/
-========================================
+----------------------------------------
 Returns currencies list
 {
     "count": 2,
@@ -168,7 +204,7 @@ Returns currencies list
 }
 
 POST http://localhost:8000/v1/currencies/
-=========================================
+-----------------------------------------
 Create currency - only by admin
 {
     "id": 3,
@@ -178,10 +214,10 @@ Create currency - only by admin
 }
 
 Currency
-********
+========
 
 GET http://localhost:8000/v1/currencies/<currency_id>/
-======================================================
+------------------------------------------------------
 Get info about single transaction
 {
     "id": 1,
