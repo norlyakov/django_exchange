@@ -1,18 +1,15 @@
 Use cases
 *********
 
-User
-====
-
 Stocks
-------
+======
 
 - See all his stocks
 - See all rates
 - Creating new stocks
 
 Transactions
-------------
+============
 
 - See transactions history
 - Create inner transaction
@@ -20,16 +17,6 @@ Transactions
 - Exchange between his own stocks
 - Transfer to other user's stock
 - Revoke transfer transaction
-
-Admin
-=====
-He can everything what user can (for all users)
-And also:
-
-Stocks
-------
-
-- Block stocks
 
 API
 ***
@@ -40,7 +27,6 @@ Stocks
 GET http://localhost:8000/v1/stocks/
 ------------------------------------
 Returns stocks list
-# For admin returns all users?
 {
     "count": 2,
     "next": null,
@@ -51,7 +37,7 @@ Returns stocks list
             "created": "2013-01-29T12:34:56.000000Z",
             "updated": "2013-01-29T12:34:56.000000Z",
             "user": "username",
-            "currency": "currencyname1",
+            "currency": "currency_code1",
             "value": 1234.56
         },
         {
@@ -59,12 +45,11 @@ Returns stocks list
             "created": "2013-01-29T12:34:56.000000Z",
             "updated": "2013-01-29T12:34:56.000000Z",
             "user": "username",
-            "currency": "currencyname2",
+            "currency": "currency_code2",
             "value": 1234.56
         },
     ]
 }
-
 
 POST http://localhost:8000/v1/stocks/
 -------------------------------------
@@ -83,7 +68,7 @@ Create a stock for current user.
 Stock
 =====
 
-GET http://localhost:8000/v1/stocks/<stock_id>/
+GET http://localhost:8000/v1/stocks/<currency_code>/
 -----------------------------------------------
 Get info about single stock
 {
@@ -162,7 +147,7 @@ Get info about single transaction
     "related_transaction": 3
 }
 
-PATCH http://localhost:8000/v1/transactions/<transaction_id>/
+POST http://localhost:8000/v1/transactions/<transaction_id>/revoke
 -------------------------------------------------------------
 Change transaction (for example revoke). Actually user can only revoke it yet.
 # mb admin can do more?
@@ -192,25 +177,17 @@ Returns currencies list
             "id": 1,
             "created": "2013-01-29T12:34:56.000000Z",
             "updated": "2013-01-29T12:34:56.000000Z",
-            "value": "USD"
+            "name": "dollars",
+            "code": "USD"
         },
         {
             "id": 2
             "created": "2013-01-29T12:34:56.000000Z",
             "updated": "2013-01-29T12:34:56.000000Z",
-            "value": "RUB"
+            "name": "ruble",
+            "code": "RUB"
         },
     ]
-}
-
-POST http://localhost:8000/v1/currencies/
------------------------------------------
-Create currency - only by admin
-{
-    "id": 3,
-    "created": "2013-01-29T12:34:56.000000Z",
-    "updated": "2013-01-29T12:34:56.000000Z",
-    "value": "EUR"
 }
 
 Currency
@@ -223,5 +200,6 @@ Get info about single transaction
     "id": 1,
     "created": "2013-01-29T12:34:56.000000Z",
     "updated": "2013-01-29T12:34:56.000000Z",
-    "value": "USD"
+    "name": "dollars",
+    "code": "USD"
 }
