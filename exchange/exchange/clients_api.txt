@@ -34,16 +34,12 @@ Returns stocks list
     "results": [
         {
             "id": 1,
-            "created": "2013-01-29T12:34:56.000000Z",
-            "updated": "2013-01-29T12:34:56.000000Z",
             "user": "username",
             "currency": "currency_code1",
             "value": 1234.56
         },
         {
             "id": 2,
-            "created": "2013-01-29T12:34:56.000000Z",
-            "updated": "2013-01-29T12:34:56.000000Z",
             "user": "username",
             "currency": "currency_code2",
             "value": 1234.56
@@ -54,29 +50,24 @@ Returns stocks list
 POST http://localhost:8000/v1/stocks/
 -------------------------------------
 Create a stock for current user.
-# Possibly admin can create for any user?
+
 {
     "id": 3,
-    "created": "2013-01-29T12:34:56.000000Z",
-    "updated": "2013-01-29T12:34:56.000000Z",
     "user": "username",
-    "currency": "currencyname2",
+    "currency": "currency_code3",
     "value": 1234.56,
 }
-
 
 Stock
 =====
 
-GET http://localhost:8000/v1/stocks/<currency_code>/
+GET http://localhost:8000/v1/stocks/<stock_id>/
 -----------------------------------------------
 Get info about single stock
 {
     "id": 3,
-    "created": "2013-01-29T12:34:56.000000Z",
-    "updated": "2013-01-29T12:34:56.000000Z",
     "user": "username",
-    "currency": "currencyname2",
+    "currency": "currency_code3",
     "value": 1234.56
 }
 
@@ -86,7 +77,7 @@ Transactions
 GET http://localhost:8000/v1/transactions/
 ------------------------------------------
 Returns transactions list
-# For admin returns all transactions?
+
 {
     "count": 2,
     "next": null,
@@ -118,7 +109,7 @@ Returns transactions list
 POST http://localhost:8000/v1/transactions/
 -------------------------------------------
 Create transaction for current user
-# Possibly admin can create for any user?
+
 {
     "id": 2,
     "created": "2013-01-29T12:34:56.000000Z",
@@ -149,8 +140,8 @@ Get info about single transaction
 
 POST http://localhost:8000/v1/transactions/<transaction_id>/revoke
 -------------------------------------------------------------
-Change transaction (for example revoke). Actually user can only revoke it yet.
-# mb admin can do more?
+Revoke transaction.
+
 {
     "id": 1,
     "created": "2013-01-29T12:34:56.000000Z",
