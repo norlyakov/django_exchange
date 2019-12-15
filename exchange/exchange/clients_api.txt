@@ -166,15 +166,11 @@ Returns currencies list
     "results": [
         {
             "id": 1,
-            "created": "2013-01-29T12:34:56.000000Z",
-            "updated": "2013-01-29T12:34:56.000000Z",
             "name": "dollars",
             "code": "USD"
         },
         {
             "id": 2
-            "created": "2013-01-29T12:34:56.000000Z",
-            "updated": "2013-01-29T12:34:56.000000Z",
             "name": "ruble",
             "code": "RUB"
         },
@@ -189,8 +185,6 @@ GET http://localhost:8000/v1/currencies/<currency_id>/
 Get info about single transaction
 {
     "id": 1,
-    "created": "2013-01-29T12:34:56.000000Z",
-    "updated": "2013-01-29T12:34:56.000000Z",
     "name": "dollars",
     "code": "USD"
 }
