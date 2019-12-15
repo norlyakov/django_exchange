@@ -182,7 +182,7 @@ Currency
 
 GET http://localhost:8000/v1/currencies/<currency_id>/
 ------------------------------------------------------
-Get info about single transaction
+Get info about single currency
 {
     "id": 1,
     "name": "dollars",
