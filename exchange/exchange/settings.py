@@ -126,3 +126,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+
+
+# it is just for example
+STOCKS_SETTINGS = {
+    'MASTER_STOCKS': {
+        'USD': 1,
+        'RUB': 2,
+    },
+    'COMMISSION_PERCENT': 0.05
+}

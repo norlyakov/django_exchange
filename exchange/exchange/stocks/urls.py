@@ -11,6 +11,7 @@ from . import views
 router = DefaultRouter()
 router.register(r'stocks', views.StockViewSet)
 router.register(r'currencies', views.CurrencyViewSet)
+router.register(r'transactions', views.TransactionViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

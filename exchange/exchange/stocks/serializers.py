@@ -3,10 +3,13 @@
 :Authors: norlyakov
 :Date: 11.12.2019
 """
+from decimal import Decimal
+
 from django.db import IntegrityError
 from rest_framework import serializers
 
-from .models import Currency, Stock
+from .models import Currency, Stock, TransactionTypes
+from .utils import UserTransactionMaker
 
 
 class CurrencySerializer(serializers.ModelSerializer):
@@ -44,3 +47,27 @@ class StockSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         raise RuntimeError('Stock can not be updated')
+
+
+TYPE_CHOICES = [
+    TransactionTypes.common,
+    TransactionTypes.exchange,
+]
+
+
+class TransactionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    created = serializers.DateTimeField(read_only=True)
+    updated = serializers.DateTimeField(read_only=True)
+    stock_from = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Stock.objects.filter(is_active=True))
+    stock_to = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Stock.objects.filter(is_active=True))
+    value = serializers.DecimalField(max_digits=100, decimal_places=5, min_value=Decimal('0'))
+    type = serializers.ChoiceField(choices=TYPE_CHOICES)
+
+    _transaction_maker = UserTransactionMaker()
+
+    def create(self, validated_data):
+        return self._transaction_maker(validated_data)
+
+    def update(self, instance, validated_data):
+        raise RuntimeError('Transaction can not be updated')
