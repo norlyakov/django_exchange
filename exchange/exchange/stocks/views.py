@@ -1,6 +1,8 @@
-from rest_framework import viewsets, permissions, mixins
+from rest_framework import viewsets, permissions, mixins, serializers
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
+from .erros import TransactionCantBeRevoked
 from .models import Stock, Currency, Transaction
 from .serializers import StockSerializer, CurrencySerializer, TransactionSerializer
 
@@ -39,6 +41,13 @@ class TransactionViewSet(mixins.CreateModelMixin,
         queryset = super().get_queryset()
         return queryset.filter(stock_from__user=self.request.user) | queryset.filter(stock_to__user=self.request.user)
 
-    @action(detail=True)
+    @action(methods=['post'], detail=True)
     def revoke(self, request, *args, **kwargs):
-        pass
+        orig_transaction = self.get_object()
+
+        try:
+            orig_transaction.revoke()
+        except TransactionCantBeRevoked as e:
+            raise serializers.ValidationError(str(e))
+
+        return Response({'status': 'Transaction revoked'})

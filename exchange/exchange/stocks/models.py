@@ -1,8 +1,11 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as CoreValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
+
+from .erros import TransactionAlreadyExecuted, TransactionCantBeRevoked
 
 
 class Currency(models.Model):
@@ -55,7 +58,7 @@ class Transaction(models.Model):
 
     def execute_and_save(self, *args, **kwargs):
         if self.created:
-            raise RuntimeError('Transaction already executed')
+            raise TransactionAlreadyExecuted()
 
         if self.stock_from:
             Stock.objects.filter(pk=self.stock_from.id).select_for_update()  # lock stock for transaction
@@ -68,6 +71,29 @@ class Transaction(models.Model):
             Stock.objects.filter(pk=self.stock_to.id).select_for_update()   # lock stock for transaction
             self.stock_to.refresh_from_db()
             self.stock_to.value += self.value
-            self.stock_from.save()
+            self.stock_to.save()
 
         self.save(*args, **kwargs)
+
+    def revoke(self):
+        Transaction.objects.filter(pk=self.pk).select_for_update()
+        self.refresh_from_db()
+
+        if not (self.type == TransactionTypes.common and self.stock_from and self.stock_to and self.pk):
+            raise TransactionCantBeRevoked('Only common transactions can be revoked')
+
+        with transaction.atomic():
+            self.type = TransactionTypes.canceled
+            self.save()
+
+            revoke_transaction = Transaction(
+                type=TransactionTypes.revoke,
+                value=self.value,
+                stock_from=self.stock_to,
+                stock_to=self.stock_from,
+                related_transaction=self,
+            )
+            try:
+                revoke_transaction.execute_and_save()
+            except CoreValidationError:
+                raise TransactionCantBeRevoked('Not enough money on foreign stock')
