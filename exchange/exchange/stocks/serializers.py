@@ -18,10 +18,10 @@ class CurrencySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'code']
 
     def create(self, validated_data):
-        return RuntimeError('Currency can not be created')
+        return NotImplementedError('Currency can not be created')
 
     def update(self, instance, validated_data):
-        raise RuntimeError('Currency can not be updated')
+        raise NotImplementedError('Currency can not be updated')
 
 
 class StockSerializer(serializers.Serializer):
@@ -32,21 +32,19 @@ class StockSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         currency_code = validated_data.pop('currency')['code']
-        try:
-            currency = Currency.objects.get(code=currency_code)
-        except Currency.DoesNotExist:
-            message = 'Currency with such code does not exist'
-            raise serializers.ValidationError(message)
-
-        try:
-            return Stock.objects.create(currency=currency, **validated_data)
-        except IntegrityError as e:
-            if 'UNIQUE' in e.args[0]:
-                message = 'User already have stock with this currency'
-                raise serializers.ValidationError(message)
+        currency = Currency.objects.filter(code=currency_code).first()
+        if not currency:
+            raise serializers.ValidationError('Currency with such code does not exist')
+        return Stock.objects.create(currency=currency, **validated_data)
 
     def update(self, instance, validated_data):
-        raise RuntimeError('Stock can not be updated')
+        raise NotImplementedError('Stock can not be updated')
+
+    def validate(self, attrs):
+        stock = Stock.objects.filter(currency=attrs['currency'], user=self.user).first()
+        if stock:
+            raise serializers.ValidationError('User already have stock with this currency')
+        return attrs
 
 
 TYPE_CHOICES = [
@@ -70,4 +68,4 @@ class TransactionSerializer(serializers.Serializer):
         return self._transaction_maker(validated_data)
 
     def update(self, instance, validated_data):
-        raise RuntimeError('Transaction can not be updated')
+        raise NotImplementedError('Transaction can not be updated')

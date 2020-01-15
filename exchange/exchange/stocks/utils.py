@@ -15,12 +15,6 @@ from .models import TransactionTypes, Transaction, Stock
 
 class UserTransactionMaker:
 
-    def __init__(self):
-        self._type_to_method = {
-            TransactionTypes.common: self.common,
-            TransactionTypes.exchange: self.exchange,
-        }
-
     def __call__(self, validated_data):
         tr_type = validated_data['type']
         tr_value = validated_data['value']
@@ -33,7 +27,7 @@ class UserTransactionMaker:
         if stock_from == stock_to:
             raise serializers.ValidationError('Need different stocks')
 
-        make_method = self._type_to_method.get(tr_type)
+        make_method = getattr(self, tr_type, None)
         if not make_method:
             raise ValueError('Unknown transaction type')
 
@@ -49,7 +43,8 @@ class UserTransactionMaker:
             raise RuntimeError(f'Master stock for {currency.code} has another currency - {master_stock.currency.code}')
         return master_stock
 
-    def common(self, tr_value, stock_from, stock_to):
+    @classmethod
+    def common(cls, tr_value, stock_from, stock_to):
         if stock_from.currency != stock_to.currency:
             raise serializers.ValidationError('Stocks must have same currency')
 
@@ -66,7 +61,7 @@ class UserTransactionMaker:
                 getcontext().prec = 5
                 commission_percent = settings.STOCKS_SETTINGS['COMMISSION_PERCENT']
                 commission_value = Decimal(commission_percent) * tr_value
-                master_stock = self._get_master_stock(stock_from.currency)
+                master_stock = cls._get_master_stock(stock_from.currency)
                 commission_transaction = Transaction(
                     type=TransactionTypes.commission,
                     value=commission_value,
@@ -79,7 +74,8 @@ class UserTransactionMaker:
 
         return orig_transaction
 
-    def exchange(self, tr_value, stock_from, stock_to):
+    @classmethod
+    def exchange(cls, tr_value, stock_from, stock_to):
         if stock_from.user != stock_to.user:
             raise serializers.ValidationError('Stocks must belong to same user')
 
@@ -88,7 +84,7 @@ class UserTransactionMaker:
 
         with transaction.atomic():
             try:
-                master_stock_to = self._get_master_stock(stock_from.currency)
+                master_stock_to = cls._get_master_stock(stock_from.currency)
                 from_transaction = Transaction(
                     type=TransactionTypes.exchange,
                     value=tr_value,
@@ -100,7 +96,7 @@ class UserTransactionMaker:
                 getcontext().prec = 5
                 rate = get_exchange_rate(stock_from.currency, stock_to.currency)
                 converted_value = tr_value * Decimal(rate)
-                master_stock_from = self._get_master_stock(stock_to.currency)
+                master_stock_from = cls._get_master_stock(stock_to.currency)
 
                 to_transaction = Transaction(
                     type=TransactionTypes.exchange,

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
+from django.db.models import F
 
 from .erros import TransactionAlreadyExecuted, TransactionCantBeRevoked
 
@@ -68,9 +69,7 @@ class Transaction(models.Model):
             self.stock_from.save()
 
         if self.stock_to:
-            Stock.objects.filter(pk=self.stock_to.id).select_for_update()   # lock stock for transaction
-            self.stock_to.refresh_from_db()
-            self.stock_to.value += self.value
+            self.stock_to.value = F('value') + self.value
             self.stock_to.save()
 
         self.save(*args, **kwargs)
