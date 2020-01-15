@@ -5,11 +5,10 @@
 """
 from decimal import Decimal
 
-from django.db import IntegrityError
 from rest_framework import serializers
 
 from .models import Currency, Stock, TransactionTypes
-from .utils import UserTransactionMaker
+from .utils import UserTransactionService
 
 
 class CurrencySerializer(serializers.ModelSerializer):
@@ -41,7 +40,10 @@ class StockSerializer(serializers.Serializer):
         raise NotImplementedError('Stock can not be updated')
 
     def validate(self, attrs):
-        stock = Stock.objects.filter(currency=attrs['currency'], user=self.user).first()
+        stock = Stock.objects.filter(
+            currency__code=attrs['currency']['code'],
+            user=self.context['request'].user
+        ).first()
         if stock:
             raise serializers.ValidationError('User already have stock with this currency')
         return attrs
@@ -62,10 +64,13 @@ class TransactionSerializer(serializers.Serializer):
     value = serializers.DecimalField(max_digits=100, decimal_places=5, min_value=Decimal('0'))
     type = serializers.ChoiceField(choices=TYPE_CHOICES)
 
-    _transaction_maker = UserTransactionMaker()
-
     def create(self, validated_data):
-        return self._transaction_maker(validated_data)
+        return UserTransactionService.make_transaction(validated_data)
 
     def update(self, instance, validated_data):
         raise NotImplementedError('Transaction can not be updated')
+
+    def validate_stock_from(self, value):
+        if value.user != self.context['request'].user:
+            raise serializers.ValidationError("Stock don't belong to user.")
+        return value

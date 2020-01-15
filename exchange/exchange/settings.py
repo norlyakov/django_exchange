@@ -138,5 +138,5 @@ STOCKS_SETTINGS = {
         'USD': 1,
         'RUB': 2,
     },
-    'COMMISSION_PERCENT': 0.05
+    'COMMISSION': 0.05
 }

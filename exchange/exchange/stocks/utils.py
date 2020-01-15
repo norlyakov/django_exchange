@@ -8,14 +8,45 @@ from decimal import Decimal, getcontext
 from django.conf import settings
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.db import transaction
+from django.db.models import F
 from rest_framework import serializers
 
+from .errors import TransactionCantBeRevoked, TransactionAlreadyExecuted
 from .models import TransactionTypes, Transaction, Stock
 
 
-class UserTransactionMaker:
+class UserTransactionService:
 
-    def __call__(self, validated_data):
+    @staticmethod
+    def _get_master_stock(currency):
+        master_stock_pk = settings.STOCKS_SETTINGS['MASTER_STOCKS'].get(currency.code)
+        if not master_stock_pk:
+            raise RuntimeError(f"Didn't find master stock for currency {currency.code}")
+        master_stock = Stock.objects.get(pk=master_stock_pk)
+        if master_stock.currency != currency:
+            raise RuntimeError(f'Master stock for {currency.code} has another currency - {master_stock.currency.code}')
+        return master_stock
+
+    @staticmethod
+    def execute_and_save(transaction_model):
+        if transaction_model.created:
+            raise TransactionAlreadyExecuted()
+
+        if transaction_model.stock_from:
+            Stock.objects.filter(pk=transaction_model.stock_from.id).select_for_update()  # lock stock for transaction
+            transaction_model.stock_from.refresh_from_db()
+            transaction_model.stock_from.value -= transaction_model.value
+            transaction_model.stock_from.clean_fields()  # check that stock's value not negative
+            transaction_model.stock_from.save()
+
+        if transaction_model.stock_to:
+            transaction_model.stock_to.value = F('value') + transaction_model.value
+            transaction_model.stock_to.save()
+
+        transaction_model.save()
+
+    @classmethod
+    def make_transaction(cls, validated_data):
         tr_type = validated_data['type']
         tr_value = validated_data['value']
         stock_from = validated_data.get('stock_from')
@@ -27,21 +58,11 @@ class UserTransactionMaker:
         if stock_from == stock_to:
             raise serializers.ValidationError('Need different stocks')
 
-        make_method = getattr(self, tr_type, None)
+        make_method = getattr(cls, tr_type.name, None)
         if not make_method:
             raise ValueError('Unknown transaction type')
 
         return make_method(tr_value, stock_from, stock_to)
-
-    @staticmethod
-    def _get_master_stock(currency):
-        master_stock_pk = settings.STOCKS_SETTINGS['MASTER_STOCKS'].get(currency.code)
-        if not master_stock_pk:
-            raise RuntimeError(f"Didn't find master stock for currency {currency.code}")
-        master_stock = Stock.objects.get(pk=master_stock_pk)
-        if master_stock.currency != currency:
-            raise RuntimeError(f'Master stock for {currency.code} has another currency - {master_stock.currency.code}')
-        return master_stock
 
     @classmethod
     def common(cls, tr_value, stock_from, stock_to):
@@ -56,11 +77,11 @@ class UserTransactionMaker:
                     stock_from=stock_from,
                     stock_to=stock_to,
                 )
-                orig_transaction.execute_and_save()
+                cls.execute_and_save(orig_transaction)
 
                 getcontext().prec = 5
-                commission_percent = settings.STOCKS_SETTINGS['COMMISSION_PERCENT']
-                commission_value = Decimal(commission_percent) * tr_value
+                commission = settings.STOCKS_SETTINGS['COMMISSION']
+                commission_value = Decimal(commission) * tr_value
                 master_stock = cls._get_master_stock(stock_from.currency)
                 commission_transaction = Transaction(
                     type=TransactionTypes.commission,
@@ -68,7 +89,7 @@ class UserTransactionMaker:
                     stock_from=stock_from,
                     stock_to=master_stock,
                 )
-                commission_transaction.execute_and_save()
+                cls.execute_and_save(commission_transaction)
             except CoreValidationError:
                 raise serializers.ValidationError("Don't have enough money on stock_from")
 
@@ -91,8 +112,11 @@ class UserTransactionMaker:
                     stock_from=stock_from,
                     stock_to=master_stock_to,
                 )
-                from_transaction.execute_and_save()
+                cls.execute_and_save(from_transaction)
+            except CoreValidationError:
+                raise serializers.ValidationError("Don't have enough money on stock_from")
 
+            try:
                 getcontext().prec = 5
                 rate = get_exchange_rate(stock_from.currency, stock_to.currency)
                 converted_value = tr_value * Decimal(rate)
@@ -104,11 +128,36 @@ class UserTransactionMaker:
                     stock_from=master_stock_from,
                     stock_to=stock_to,
                 )
-                to_transaction.execute_and_save()
+                cls.execute_and_save(to_transaction)
             except CoreValidationError:
-                raise serializers.ValidationError("Don't have enough money on stock_from")
+                raise serializers.ValidationError("Don't have enough money on master stock")
 
         return from_transaction
+
+    @classmethod
+    def revoke(cls, orig_transaction):
+        with transaction.atomic():
+            Transaction.objects.filter(pk=orig_transaction.pk).select_for_update()
+            orig_transaction.refresh_from_db()
+
+            if not (orig_transaction.type == TransactionTypes.common and
+                    orig_transaction.stock_from and orig_transaction.stock_to and orig_transaction.pk):
+                raise TransactionCantBeRevoked('Only common transactions can be revoked')
+
+            orig_transaction.type = TransactionTypes.canceled
+            orig_transaction.save()
+
+            revoke_transaction = Transaction(
+                type=TransactionTypes.revoke,
+                value=orig_transaction.value,
+                stock_from=orig_transaction.stock_to,
+                stock_to=orig_transaction.stock_from,
+                related_transaction=orig_transaction,
+            )
+            try:
+                cls.execute_and_save(revoke_transaction)
+            except CoreValidationError:
+                raise TransactionCantBeRevoked('Not enough money on foreign stock')
 
 
 def get_exchange_rate(currency_from, currency_to):

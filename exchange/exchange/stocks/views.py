@@ -2,9 +2,10 @@ from rest_framework import viewsets, permissions, mixins, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .erros import TransactionCantBeRevoked
+from .errors import TransactionCantBeRevoked
 from .models import Stock, Currency, Transaction
 from .serializers import StockSerializer, CurrencySerializer, TransactionSerializer
+from .utils import UserTransactionService
 
 
 class CurrencyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -46,7 +47,7 @@ class TransactionViewSet(mixins.CreateModelMixin,
         orig_transaction = self.get_object()
 
         try:
-            orig_transaction.revoke()
+            UserTransactionService.revoke(orig_transaction)
         except TransactionCantBeRevoked as e:
             raise serializers.ValidationError(str(e))
 
