@@ -13,6 +13,9 @@ class CurrencyViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CurrencySerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        return super().get_queryset().order_by('id')
+
 
 class StockViewSet(mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin,
@@ -24,7 +27,7 @@ class StockViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(user=self.request.user)
+        return queryset.filter(user=self.request.user).order_by('id')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -39,7 +42,7 @@ class TransactionViewSet(mixins.CreateModelMixin,
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().order_by('id')
         return queryset.filter(stock_from__user=self.request.user) | queryset.filter(stock_to__user=self.request.user)
 
     @action(methods=['post'], detail=True)
