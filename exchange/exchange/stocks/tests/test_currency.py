@@ -31,7 +31,7 @@ class CurrencyAPITests(APITestCase):
         self.client.login(username=self.user.username, password=self.password)
 
     def test_get_list(self):
-        url = reverse('stocks:currency-list')
+        url = reverse('currency-list')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -47,7 +47,7 @@ class CurrencyAPITests(APITestCase):
         ])
 
     def test_get_detail(self):
-        url = reverse('stocks:currency-detail', args=[1])
+        url = reverse('currency-detail', args=[1])
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
