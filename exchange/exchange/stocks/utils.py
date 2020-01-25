@@ -29,21 +29,23 @@ class UserTransactionService:
 
     @staticmethod
     def execute_and_save(transaction_model):
-        if transaction_model.created:
-            raise TransactionAlreadyExecuted()
+        with transaction.atomic():
+            if transaction_model.created:
+                raise TransactionAlreadyExecuted()
 
-        if transaction_model.stock_from:
-            Stock.objects.filter(pk=transaction_model.stock_from.id).select_for_update()  # lock stock for transaction
-            transaction_model.stock_from.refresh_from_db()
-            transaction_model.stock_from.value -= transaction_model.value
-            transaction_model.stock_from.clean_fields()  # check that stock's value not negative
-            transaction_model.stock_from.save()
+            if transaction_model.stock_from:
+                # lock stock for transaction
+                Stock.objects.filter(pk=transaction_model.stock_from.id).select_for_update()
+                transaction_model.stock_from.refresh_from_db()
+                transaction_model.stock_from.value -= transaction_model.value
+                transaction_model.stock_from.clean_fields()  # check that stock's value not negative
+                transaction_model.stock_from.save()
 
-        if transaction_model.stock_to:
-            transaction_model.stock_to.value = F('value') + transaction_model.value
-            transaction_model.stock_to.save()
+            if transaction_model.stock_to:
+                transaction_model.stock_to.value = F('value') + transaction_model.value
+                transaction_model.stock_to.save()
 
-        transaction_model.save()
+            transaction_model.save()
 
     @classmethod
     def make_transaction(cls, validated_data):
@@ -66,7 +68,7 @@ class UserTransactionService:
 
     @classmethod
     def common(cls, tr_value, stock_from, stock_to):
-        if stock_from.currency != stock_to.currency:
+        if stock_from.currency_id != stock_to.currency_id:
             raise serializers.ValidationError('Stocks must have same currency')
 
         with transaction.atomic():
@@ -97,10 +99,10 @@ class UserTransactionService:
 
     @classmethod
     def exchange(cls, tr_value, stock_from, stock_to):
-        if stock_from.user != stock_to.user:
+        if stock_from.user_id != stock_to.user_id:
             raise serializers.ValidationError('Stocks must belong to same user')
 
-        if stock_from.currency == stock_to.currency:
+        if stock_from.currency_id == stock_to.currency_id:
             raise serializers.ValidationError('Stocks must have different currency')
 
         with transaction.atomic():

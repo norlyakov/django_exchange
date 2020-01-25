@@ -2,7 +2,7 @@
 
 TODO: 
 
-- Fix util TransactionMaker
++ Fix util TransactionMaker
 - Tests
 - In/Out transactions 
 - Admin
