@@ -12,14 +12,13 @@ from ..testing import create_currency
 
 
 class CurrencyAPITests(APITestCase):
-    currencies = []
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.currencies.append(create_currency('USD'))
-        cls.currencies.append(create_currency('RUB'))
-        cls.currencies.append(create_currency('EUR'))
+        create_currency('USD')
+        create_currency('RUB')
+        create_currency('EUR')
         cls.password = 'password'
         cls.user = User.objects.create_user(
             username='test', email='test@test.com', password=cls.password)

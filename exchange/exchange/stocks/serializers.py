@@ -61,7 +61,7 @@ class TransactionSerializer(serializers.Serializer):
     updated = serializers.DateTimeField(read_only=True)
     stock_from = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Stock.objects.filter(is_active=True))
     stock_to = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Stock.objects.filter(is_active=True))
-    value = serializers.DecimalField(max_digits=100, decimal_places=5, min_value=Decimal('0'))
+    value = serializers.DecimalField(max_digits=100, decimal_places=5, min_value=Decimal('0.00001'))
     type = serializers.ChoiceField(choices=TYPE_CHOICES)
 
     def create(self, validated_data):

@@ -90,6 +90,7 @@ class UserTransactionService:
                     value=commission_value,
                     stock_from=stock_from,
                     stock_to=master_stock,
+                    related_transaction=orig_transaction,
                 )
                 cls.execute_and_save(commission_transaction)
             except CoreValidationError:
@@ -129,10 +130,14 @@ class UserTransactionService:
                     value=converted_value,
                     stock_from=master_stock_from,
                     stock_to=stock_to,
+                    related_transaction=from_transaction
                 )
                 cls.execute_and_save(to_transaction)
             except CoreValidationError:
                 raise serializers.ValidationError("Don't have enough money on master stock")
+
+            from_transaction.related_transaction = to_transaction
+            from_transaction.save()
 
         return from_transaction
 

@@ -12,7 +12,6 @@ from ..testing import create_currency, create_stock
 
 
 class StockAPITests(APITestCase):
-    stocks = []
 
     @classmethod
     def setUpClass(cls):
@@ -24,11 +23,11 @@ class StockAPITests(APITestCase):
             username='other', email='other@test.com', password=cls.password)
 
         usd = create_currency('USD')
-        cls.stocks.append(create_stock(cls.owner, usd))
+        create_stock(cls.owner, usd)
         rub = create_currency('RUB')
-        cls.stocks.append(create_stock(cls.owner, rub))
+        create_stock(cls.owner, rub)
         eur = create_currency('EUR')
-        cls.stocks.append(create_stock(cls.owner, eur))
+        create_stock(cls.owner, eur)
 
     def tearDown(self):
         self.client.logout()
